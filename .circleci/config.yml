@@ -154,6 +154,28 @@ jobs:
             #ansible-playbook -i inventory.txt prometheus-exporter.yml -vv
       # Here's where you will add some code to rollback on failure      
 
+  run-migrations:
+    docker: 
+      - image: mareimorsy/aws-node
+
+    steps:
+      - checkout
+      - run:
+          name: Run migrations
+          command: |
+            export TYPEORM_HOST=$(aws ec2 describe-instances --region us-east-1 --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
+            cd backend
+            npm install
+            npm run premigrations
+            npm run migrations > migrations_dump.txt
+
+      # - run:
+      #     name: Send migration results to memstash
+      #     command: |
+      #       # Your code here
+      #       exit 1
+     # Here's where you will add some code to rollback on failure      
+
 
 workflows:
   default:
@@ -173,4 +195,5 @@ workflows:
       #     filters:
       #       branches:
       #         only: [main]    
-      - configure-infrastructure         
+      #- configure-infrastructure 
+      - run-migrations        

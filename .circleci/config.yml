@@ -129,28 +129,28 @@ jobs:
   #         paths:
   #           - project/.circleci/ansible/inventory.txt 
 
-  # configure-infrastructure:
-  #   docker:
-  #     - image: mareimorsy/aws-node
-  #   steps:
-  #     - checkout
-  #     - add_ssh_keys:
-  #         fingerprints: ["9b:92:e3:f5:aa:a7:bc:6b:bc:43:1f:a8:3b:89:10:49"]
-  #     # - run:
-  #     #     name: "Install Dependencies"
-  #     #     command: |
-  #     #       apk add ansible gzip openssh-client
-  #     - attach_workspace:
-  #         at: ~/
-  #     - run:
-  #         name: Configure server
-  #         command: |
-  #           ls
-  #           pwd
-  #           cd .circleci/ansible
-  #           aws ec2 describe-instances --region us-east-1 --query 'Reservations[*].Instances[*].PublicIpAddress' --output text >> inventory.txt
-  #           cat inventory.txt
-  #           ansible-playbook -i inventory.txt configure-server.yml -vv
+  configure-infrastructure:
+    docker:
+      - image: mareimorsy/aws-node
+    steps:
+      - checkout
+      - add_ssh_keys:
+          fingerprints: ["9b:92:e3:f5:aa:a7:bc:6b:bc:43:1f:a8:3b:89:10:49"]
+      # - run:
+      #     name: "Install Dependencies"
+      #     command: |
+      #       apk add ansible gzip openssh-client
+      - attach_workspace:
+          at: ~/
+      - run:
+          name: Configure server
+          command: |
+            ls
+            pwd
+            cd .circleci/ansible
+            aws ec2 describe-instances --region us-east-1 --query 'Reservations[*].Instances[*].PublicIpAddress' --output text >> inventory.txt
+            cat inventory.txt
+            ansible-playbook -i inventory.txt configure-server.yml -vv
   #           #ansible-playbook -i inventory.txt prometheus-exporter.yml -vv
   #     # Here's where you will add some code to rollback on failure      
 
@@ -195,5 +195,6 @@ workflows:
       #     filters:
       #       branches:
       #         only: [main]    
-      #- configure-infrastructure 
-      - run-migrations        
+      - configure-infrastructure 
+      - run-migrations
+           requires: [configure-infrastructure]       

@@ -138,8 +138,8 @@ jobs:
           fingerprints: ["3e:23:08:eb:00:cc:fd:d2:69:64:91:c5:7d:55:68:9d"]
       - run:
           name: "Install Dependencies"
-          command: |
-            apk add ansible gzip openssh-client
+          #command: |
+          #  apk add ansible gzip openssh-client
       - attach_workspace:
           at: ~/
       - run:

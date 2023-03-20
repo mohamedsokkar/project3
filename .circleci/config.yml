@@ -202,7 +202,8 @@ jobs:
             cp artifact.tar.gz ~/project/.circleci/ansible/roles/deploy/artifact.tar.gz
             ls ../.circleci/ansible/roles/deploy/
             cd ../.circleci/ansible
-            ansible-playbook -i 18-204-10-217 deploy-backend.yml
+            cat inventory.txt
+            ansible-playbook deploy-backend.yml
       # Here's where you will add some code to rollback on failure  
 
 workflows:

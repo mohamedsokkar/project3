@@ -1,5 +1,43 @@
 version: 2.1
 
+commands:
+  destroy_environment:
+    description: Destroy back-end and front-end cloudformation stacks given a workflow ID.
+    parameters:
+      Workflow_ID:
+        type: string
+        default: ${CIRCLE_WORKFLOW_ID:0:5}
+    steps:
+      - run:
+          name: Destroy environment
+          when: on_fail
+          command: |
+            aws cloudformation delete-stack --stack-name backend-${CIRCLE_WORKFLOW_ID:0:5}
+            aws s3 rm s3://udapeople-<<parameters.Workflow_ID>> --recursive
+            aws cloudformation delete-stack --stack-name frontend-<< parameters.Workflow_ID >>
+
+  revert-migrations:
+    description: Revert the last migration
+    parameters:
+      Workflow_ID:
+        type: string
+        default: ${CIRCLE_WORKFLOW_ID:0:7}
+    steps:
+      - run:
+          name: Revert migrations
+          when: on_fail
+          command: |
+            SUCCESS=$(curl --insecure  https://kvdb.io/2Lya4PgMr5T8zKrMVjCAgW/migration_<< parameters.Workflow_ID >>)
+            echo "$SUCCESS"
+            # Logic for reverting the database state
+            if (( $SUCCESS == 1 ));
+            then
+              cd ~/project/backend
+              npm install
+              npm run migration:revert
+            fi
+
+
 jobs:
 
   # build-frontend:
@@ -93,41 +131,68 @@ jobs:
   #           exit 0
   #           npm audit
 
-  deploy-infrastructure:
+  # deploy-infrastructure:
+  #   docker:
+  #     - image: amazon/aws-cli
+  #   steps:
+  #     - checkout
+  #     - run:
+  #         name: Install dependencies
+  #         command: |
+  #           yum install -y tar gzip
+  #     # - run:
+  #     #     name: Ensure back-end infrastructure exists
+  #     #     command: |
+  #     #       aws cloudformation deploy \
+  #     #         --template-file .circleci/files/backend.yml \
+  #     #         --tags project=udapeople \
+  #     #         --stack-name "backend" \
+  #     #         --parameter-overrides ID=${CIRCLE_WORKFLOW_ID:0:5}
+
+  #     - run:
+  #         name: Ensure front-end infrastructure exist
+  #         command: |
+  #           aws cloudformation deploy \
+  #             --template-file .circleci/files/frontend.yml \
+  #             --tags project=udapeople \
+  #             --stack-name "frontend-${CIRCLE_WORKFLOW_ID:0:5}" \
+  #             --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:5}"
+  #     - run:
+  #         name: Add back-end ip to ansible inventory
+  #         command: |
+  #           aws ec2 describe-instances --region us-east-1 --query 'Reservations[*].Instances[*].PublicIpAddress' --output text >> .circleci/ansible/inventory.txt
+
+  #     - persist_to_workspace:
+  #         root: ~/
+  #         paths:
+  #           - project/.circleci/ansible/inventory.txt 
+
+
+  smoke-test:
     docker:
       - image: amazon/aws-cli
     steps:
-      - checkout
+      # - checkout
       - run:
-          name: Install dependencies
+          name: Backend smoke test.
           command: |
-            yum install -y tar gzip
-      # - run:
-      #     name: Ensure back-end infrastructure exists
-      #     command: |
-      #       aws cloudformation deploy \
-      #         --template-file .circleci/files/backend.yml \
-      #         --tags project=udapeople \
-      #         --stack-name "backend" \
-      #         --parameter-overrides ID=${CIRCLE_WORKFLOW_ID:0:5}
+            export BACKEND_PUBLIC_IP=$(aws ec2 describe-instances --region us-east-1 --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
+            
+            # URL="http://$BACKEND_PUBLIC_IP:3030/api/status"
+            URL="http://g00gle.com"
+            if curl -s --head ${URL}
+            then
+              echo "It worked!"
+              exit 0
+            else
+              echo "Rolling Back"
+              exit 1
+            fi
+      #- notify_on_failure
+      - destroy_environment
+      - revert-migrations
 
-      - run:
-          name: Ensure front-end infrastructure exist
-          command: |
-            aws cloudformation deploy \
-              --template-file .circleci/files/frontend.yml \
-              --tags project=udapeople \
-              --stack-name "frontend-${CIRCLE_WORKFLOW_ID:0:5}" \
-              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:5}"
-      - run:
-          name: Add back-end ip to ansible inventory
-          command: |
-            aws ec2 describe-instances --region us-east-1 --query 'Reservations[*].Instances[*].PublicIpAddress' --output text >> .circleci/ansible/inventory.txt
 
-      - persist_to_workspace:
-          root: ~/
-          paths:
-            - project/.circleci/ansible/inventory.txt 
 
   #  configure-infrastructure:
   #   docker:
@@ -208,23 +273,23 @@ jobs:
 
 
 
-  deploy-frontend:
-    docker:
-      - image: mareimorsy/aws-node
-    steps:
-      - checkout
-      - run:
-          name: Deploy Frontend
-          command: |
-            export BACKEND_PUBLIC_IP=$(aws ec2 describe-instances --region us-east-1 --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
-             echo "API_URL=http://$BACKEND_PUBLIC_IP:3030" 
-            # Build the frontend
-            cd frontend
-            echo "API_URL=http://$BACKEND_PUBLIC_IP:3030" > .env
-            npm install
-            npm run build:prod
-            # aws s3 sync dist s3://udapeople-project
-            aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:5} --recursive
+  # deploy-frontend:
+  #   docker:
+  #     - image: mareimorsy/aws-node
+  #   steps:
+  #     - checkout
+  #     - run:
+  #         name: Deploy Frontend
+  #         command: |
+  #           export BACKEND_PUBLIC_IP=$(aws ec2 describe-instances --region us-east-1 --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
+  #            echo "API_URL=http://$BACKEND_PUBLIC_IP:3030" 
+  #           # Build the frontend
+  #           cd frontend
+  #           echo "API_URL=http://$BACKEND_PUBLIC_IP:3030" > .env
+  #           npm install
+  #           npm run build:prod
+  #           # aws s3 sync dist s3://udapeople-project
+  #           aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:5} --recursive
 
 
 workflows:
@@ -240,15 +305,16 @@ workflows:
       #     requires: [build-backend]
       # - scan-frontend:
       #     requires: [build-frontend]
-      - deploy-infrastructure:
-          # requires: [test-frontend, test-backend, scan-frontend, scan-backend]
-          filters:
-            branches:   
-              only: [main]               
+      # - deploy-infrastructure:
+      #     # requires: [test-frontend, test-backend, scan-frontend, scan-backend]
+      #     filters:
+      #       branches:   
+      #         only: [main]               
       #- configure-infrastructure
       #- run-migrations
           #  requires: [configure-infrastructure]    
       #- deploy-backend  
 
-      - deploy-frontend:
-          requires: [deploy-infrastructure]        
+      # - deploy-frontend:
+      #     requires: [deploy-infrastructure]    
+      - smoke-test    

@@ -13,7 +13,7 @@ commands:
           when: on_fail
           command: |
             
-            aws s3 rm s3://udapeople-4a144 --recursive
+            aws s3 rm s3://udapeople-e1ee4 --recursive
             aws cloudformation delete-stack --stack-name frontend-c74b6
            
 

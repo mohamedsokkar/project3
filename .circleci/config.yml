@@ -169,31 +169,50 @@ jobs:
   #           - project/.circleci/ansible/inventory.txt 
 
 
-  smoke-test:
-    docker:
-      - image: amazon/aws-cli
-    steps:
-      # - checkout
-      - run:
-          name: Backend smoke test.
-          command: |
-            export BACKEND_PUBLIC_IP=$(aws ec2 describe-instances --region us-east-1 --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
+  # smoke-test:
+  #   docker:
+  #     - image: amazon/aws-cli
+  #   steps:
+  #     # - checkout
+  #     - run:
+  #         name: Backend smoke test.
+  #         command: |
+  #           export BACKEND_PUBLIC_IP=$(aws ec2 describe-instances --region us-east-1 --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
             
-            # URL="http://$BACKEND_PUBLIC_IP:3030/api/status"
-            URL="http://g00gle.com"
-            if curl -s --head ${URL}
-            then
-              echo "It worked!"
-              exit 0
-            else
-              echo "Rolling Back"
-              exit 1
-            fi
-      #- notify_on_failure
-      - destroy_environment
-      - revert-migrations
+  #           # URL="http://$BACKEND_PUBLIC_IP:3030/api/status"
+  #           URL="http://g00gle.com"
+  #           if curl -s --head ${URL}
+  #           then
+  #             echo "It worked!"
+  #             exit 0
+  #           else
+  #             echo "Rolling Back"
+  #             exit 1
+  #           fi
+  #     #- notify_on_failure
+  #     - destroy_environment
+  #     - revert-migrations
 
-
+  cloudfront-update:
+    docker:
+      - image: mareimorsy/aws-node
+    steps:
+      - checkout
+      - run:
+          name: Save Old Workflow ID to kvdb.io
+          command: |
+            export OLD_WORKFLOW_ID=$(aws cloudformation \
+                      list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
+                      --no-paginate --output text)
+            echo "Old Wokflow ID: $OLD_WORKFLOW_ID"
+            curl -k https://kvdb.io/2Lya4PgMr5T8zKrMVjCAgW/old_workflow_id -d "${OLD_WORKFLOW_ID}"
+      - run:
+          name: Update cloudfront distribution
+          command: |
+            aws cloudformation deploy \
+              --template-file .circleci/files/cloudfront.yml \
+              --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:5}" \
+              --stack-name InitialStack
 
   #  configure-infrastructure:
   #   docker:
@@ -318,5 +337,6 @@ workflows:
 
       # - deploy-frontend:
       #     requires: [deploy-infrastructure]    
-      - smoke-test
-           #requires: [deploy-backend, deploy-frontend] 
+      # - smoke-test
+      #      #requires: [deploy-backend, deploy-frontend]
+      - cloudfront-update

@@ -258,57 +258,57 @@ jobs:
       #       exit 1
      # Here's where you will add some code to rollback on failure      
 
-  deploy-backend:
-    docker:
-      - image: mareimorsy/aws-node
-    steps:
-      - checkout
-      - add_ssh_keys:
-          fingerprints: ["9b:92:e3:f5:aa:a7:bc:6b:bc:43:1f:a8:3b:89:10:49"]
-      - run:
-          name: Deploy backend
-          command: |
-            export TYPEORM_HOST=$(aws ec2 describe-instances --region us-east-1 --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
-            echo $TYPEORM_HOST >> .circleci/ansible/inventory.txt
+  # deploy-backend:
+  #   docker:
+  #     - image: mareimorsy/aws-node
+  #   steps:
+  #     - checkout
+  #     - add_ssh_keys:
+  #         fingerprints: ["9b:92:e3:f5:aa:a7:bc:6b:bc:43:1f:a8:3b:89:10:49"]
+  #     - run:
+  #         name: Deploy backend
+  #         command: |
+  #           export TYPEORM_HOST=$(aws ec2 describe-instances --region us-east-1 --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
+  #           echo $TYPEORM_HOST >> .circleci/ansible/inventory.txt
 
-            cd backend
-            npm i
-            npm run build
-            echo "TYPEORM_ENTITIES=./dist/modules/domain/**/*.entity{.ts,.js}" > .env
-            echo "TYPEORM_HOST=${TYPEORM_HOST}" >> .env
-            echo "TYPEORM_PORT=${TYPEORM_PORT}" >> .env
-            echo "TYPEORM_USERNAME=${TYPEORM_USERNAME}" >> .env
-            echo "TYPEORM_PASSWORD=${TYPEORM_PASSWORD}" >> .env
-            echo "TYPEORM_DATABASE=${TYPEORM_DATABASE}" >> .env
-            echo "TYPEORM_MIGRATIONS_DIR=./dist/migrations" >> .env
-            echo "TYPEORM_MIGRATIONS=./dist/migrations/*.ts" >> .env
-            tar -czf artifact.tar.gz dist/* package* .env
-            cp artifact.tar.gz ~/project/.circleci/ansible/roles/deploy/artifact.tar.gz
-            ls ../.circleci/ansible/roles/deploy/
-            cd ../.circleci/ansible
-            cat inventory.txt
-            ansible-playbook -i inventory.txt deploy-backend.yml
-      #Here's where you will add some code to rollback on failure  
+  #           cd backend
+  #           npm i
+  #           npm run build
+  #           echo "TYPEORM_ENTITIES=./dist/modules/domain/**/*.entity{.ts,.js}" > .env
+  #           echo "TYPEORM_HOST=${TYPEORM_HOST}" >> .env
+  #           echo "TYPEORM_PORT=${TYPEORM_PORT}" >> .env
+  #           echo "TYPEORM_USERNAME=${TYPEORM_USERNAME}" >> .env
+  #           echo "TYPEORM_PASSWORD=${TYPEORM_PASSWORD}" >> .env
+  #           echo "TYPEORM_DATABASE=${TYPEORM_DATABASE}" >> .env
+  #           echo "TYPEORM_MIGRATIONS_DIR=./dist/migrations" >> .env
+  #           echo "TYPEORM_MIGRATIONS=./dist/migrations/*.ts" >> .env
+  #           tar -czf artifact.tar.gz dist/* package* .env
+  #           cp artifact.tar.gz ~/project/.circleci/ansible/roles/deploy/artifact.tar.gz
+  #           ls ../.circleci/ansible/roles/deploy/
+  #           cd ../.circleci/ansible
+  #           cat inventory.txt
+  #           ansible-playbook -i inventory.txt deploy-backend.yml
+  #     #Here's where you will add some code to rollback on failure  
 
 
 
-  deploy-frontend:
-    docker:
-      - image: mareimorsy/aws-node
-    steps:
-      - checkout
-      - run:
-          name: Deploy Frontend
-          command: |
-            export BACKEND_PUBLIC_IP=$(aws ec2 describe-instances --region us-east-1 --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
-             echo "API_URL=http://$BACKEND_PUBLIC_IP:3030" 
-            # Build the frontend
-            cd frontend
-            echo "API_URL=http://$BACKEND_PUBLIC_IP:3030" > .env
-            npm install
-            npm run build:prod
-            # aws s3 sync dist s3://udapeople-project
-            aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:5} --recursive
+  # deploy-frontend:
+  #   docker:
+  #     - image: mareimorsy/aws-node
+  #   steps:
+  #     - checkout
+  #     - run:
+  #         name: Deploy Frontend
+  #         command: |
+  #           export BACKEND_PUBLIC_IP=$(aws ec2 describe-instances --region us-east-1 --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
+  #            echo "API_URL=http://$BACKEND_PUBLIC_IP:3030" 
+  #           # Build the frontend
+  #           cd frontend
+  #           echo "API_URL=http://$BACKEND_PUBLIC_IP:3030" > .env
+  #           npm install
+  #           npm run build:prod
+  #           # aws s3 sync dist s3://udapeople-project
+  #           aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:5} --recursive
 
 
   # cleanup:
@@ -352,11 +352,11 @@ workflows:
       #- configure-infrastructure
       #- run-migrations
           #  requires: [configure-infrastructure]    
-       - deploy-backend  
+      #  - deploy-backend  
 
-       - deploy-frontend
+      #  - deploy-frontend
       #     requires: [deploy-infrastructure]    
-       - smoke-test:
-            requires: [deploy-backend, deploy-frontend]
+       - smoke-test
+            # requires: [deploy-backend, deploy-frontend]
       #- cloudfront-update
       #- cleanup

@@ -169,7 +169,7 @@ jobs:
   #           - project/.circleci/ansible/inventory.txt 
 
 
-    smoke-test:
+  smoke-test:
     docker:
       - image: amazon/aws-cli
     steps:

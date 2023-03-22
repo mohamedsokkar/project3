@@ -15,9 +15,8 @@ commands:
           name: Destroy environment
           when: on_fail
           command: |
-            #aws cloudformation delete-stack --stack-name backend-${CIRCLE_WORKFLOW_ID:0:5}
-            aws s3 rm s3://udapeople-e1ee4 --recursive
-            aws cloudformation delete-stack --stack-name frontend-e1ee4
+            aws s3 rm s3://udapeople-1f92a --recursive
+            aws cloudformation delete-stack --stack-name frontend-1f92a
            
 
   revert-migrations:
@@ -179,7 +178,7 @@ jobs:
       - run:
           name: Backend smoke test.
           command: |
-            export BACKEND_PUBLIC_IP=$(aws ec2 describe-instances --region us-east-1 --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
+            #export BACKEND_PUBLIC_IP=$(aws ec2 describe-instances --region us-east-1 --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
             
             # URL="http://$BACKEND_PUBLIC_IP:3030/api/status"
             URL="http://g00gle.com"

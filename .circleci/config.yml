@@ -30,9 +30,15 @@ commands:
           name: Revert migrations
           when: on_fail
           command: |
+            SUCCESS=$(curl --insecure  https://kvdb.io/${KVDB_BUCKET}/migration_<< parameters.Workflow_ID >>)
+            echo "$SUCCESS"
+            # Logic for reverting the database state
+            if (( $SUCCESS == 1 ));
+            then
               cd ~/project/backend
               npm install
               npm run migration:revert
+            fi
 
 jobs:
 
@@ -331,7 +337,7 @@ workflows:
   default:
     jobs:
       # - build-frontend
-      # - build-backend
+      - build-backend
       # - test-frontend:
       #     requires: [build-frontend]
       # - test-backend:
@@ -340,19 +346,20 @@ workflows:
       #     requires: [build-backend]
       # - scan-frontend:
       #     requires: [build-frontend]
-      # - deploy-infrastructure:
-      #     # requires: [test-frontend, test-backend, scan-frontend, scan-backend]
+      - deploy-infrastructure:
+             requires: [build-backend]
       #     filters:
       #       branches:   
       #         only: [main]               
-      #- configure-infrastructure
-      #- run-migrations
-          #  requires: [configure-infrastructure]    
-      #  - deploy-backend  
-
+      - configure-infrastructure:
+             requires: [deploy-infrastructure]
+      - run-migrations
+             requires: [configure-infrastructure]    
+        - deploy-backend  
+             requires: [run-migrations]
       #  - deploy-frontend
       #     requires: [deploy-infrastructure]    
-       - smoke-test
-            # requires: [deploy-backend, deploy-frontend]
+       - smoke-test:
+             requires: [deploy-backend]
       #- cloudfront-update
       #- cleanup

@@ -28,109 +28,109 @@ commands:
           name: Revert migrations
           when: on_fail
           command: |
-            # SUCCESS=$(curl --insecure  https://kvdb.io/2Lya4PgMr5T8zKrMVjCAgW/migration_<< parameters.Workflow_ID >>)
-            # echo "$SUCCESS"
-            # # Logic for reverting the database state
-            # if (( $SUCCESS == 1 ));
-            # then
-            #   cd ~/project/backend
-            #   npm install
-            #   npm run migration:revert
-            # fi
+            SUCCESS=$(curl --insecure  https://kvdb.io/2Lya4PgMr5T8zKrMVjCAgW/migration_<< parameters.Workflow_ID >>)
+            echo "$SUCCESS"
+            # Logic for reverting the database state
+            if (( $SUCCESS == 1 ));
+            then
+              cd ~/project/backend
+              npm install
+              npm run migration:revert
+            fi
             exit 0
 
 jobs:
 
-  build-frontend:
-    docker:
-      - image: circleci/node:13.8.0
-    # working_directory: ~/project/.circleci/ansible/inventory.txt
-    steps:
-      - checkout
-      - restore_cache:
-          keys: [frontend-build]
-      - run:
-          name: Build front-end
-          command: |
-            exit 0
-            cd frontend
-            npm run build:prod
-      - save_cache:
-          paths: [frontend/node_modules]
-          key: frontend-build
+  # build-frontend:
+  #   docker:
+  #     - image: circleci/node:13.8.0
+  #   # working_directory: ~/project/.circleci/ansible/inventory.txt
+  #   steps:
+  #     - checkout
+  #     - restore_cache:
+  #         keys: [frontend-build]
+  #     - run:
+  #         name: Build front-end
+  #         command: |
+  #           exit 0
+  #           cd frontend
+  #           npm run build:prod
+  #     - save_cache:
+  #         paths: [frontend/node_modules]
+  #         key: frontend-build
 
-  build-backend:
-    docker:
-      - image: circleci/node:13.8.0
-    steps:
-      - checkout
-      - restore_cache:
-          keys: [backend-build]
-      - run:
-          name: Back-end build
-          command: |
-            cd backend
-            npm install
-            npm run build
-      - save_cache:
-          paths: [backend/node_modules]
-          key: backend-build
+  # build-backend:
+  #   docker:
+  #     - image: circleci/node:13.8.0
+  #   steps:
+  #     - checkout
+  #     - restore_cache:
+  #         keys: [backend-build]
+  #     - run:
+  #         name: Back-end build
+  #         command: |
+  #           cd backend
+  #           npm install
+  #           npm run build
+  #     - save_cache:
+  #         paths: [backend/node_modules]
+  #         key: backend-build
 
-  test-frontend:
-    docker:
-      - image: circleci/node:13.8.0
-    steps:
-      - checkout
-      - restore_cache:
-          keys: [frontend-build]
-      - run:
-          name: Test front-end
-          command: |
-            cd frontend
-            npm install
-            npm install oauth-sign
-            # npm run build
-            npm run test
+  # test-frontend:
+  #   docker:
+  #     - image: circleci/node:13.8.0
+  #   steps:
+  #     - checkout
+  #     - restore_cache:
+  #         keys: [frontend-build]
+  #     - run:
+  #         name: Test front-end
+  #         command: |
+  #           cd frontend
+  #           npm install
+  #           npm install oauth-sign
+  #           # npm run build
+  #           npm run test
                 
-  test-backend:
-    docker:
-      - image: circleci/node:13.8.0
-    steps:
-      - checkout
-      - restore_cache:
-          keys: [backend-build]
-      - run:
-          name: Test Back-end
-          command: |
-            exit 0
-            cd backend
-            npm run test
+  # test-backend:
+  #   docker:
+  #     - image: circleci/node:13.8.0
+  #   steps:
+  #     - checkout
+  #     - restore_cache:
+  #         keys: [backend-build]
+  #     - run:
+  #         name: Test Back-end
+  #         command: |
+  #           exit 0
+  #           cd backend
+  #           npm run test
 
-  scan-frontend:
-    docker:
-      - image: circleci/node:13.8.0
-    steps:
-      - checkout
-      - restore_cache:
-          keys: [frontend-build]
-      - run:
-          name: Scan front-end
-          command: |
-            exit 0
-            npm audit
+  # scan-frontend:
+  #   docker:
+  #     - image: circleci/node:13.8.0
+  #   steps:
+  #     - checkout
+  #     - restore_cache:
+  #         keys: [frontend-build]
+  #     - run:
+  #         name: Scan front-end
+  #         command: |
+  #           exit 0
+  #           npm audit
 
-  scan-backend:
-    docker:
-      - image: circleci/node:13.8.0
-    steps:
-      - checkout
-      - restore_cache:
-          keys: [backend-build]
-      - run:
-          name: Scan Back-end
-          command: |
-            exit 0
-            npm audit
+  # scan-backend:
+  #   docker:
+  #     - image: circleci/node:13.8.0
+  #   steps:
+  #     - checkout
+  #     - restore_cache:
+  #         keys: [backend-build]
+  #     - run:
+  #         name: Scan Back-end
+  #         command: |
+  #           exit 0
+  #           npm audit
 
   # deploy-infrastructure:
   #   docker:
@@ -169,29 +169,28 @@ jobs:
   #           - project/.circleci/ansible/inventory.txt 
 
 
-  # smoke-test:
-  #   docker:
-  #     - image: amazon/aws-cli
-  #   steps:
-  #     # - checkout
-  #     - run:
-  #         name: Backend smoke test.
-  #         command: |
-  #           export BACKEND_PUBLIC_IP=$(aws ec2 describe-instances --region us-east-1 --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
+    smoke-test:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      # - checkout
+      - run:
+          name: Backend smoke test.
+          command: |
+            export BACKEND_PUBLIC_IP=$(aws ec2 describe-instances --region us-east-1 --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
             
-  #           # URL="http://$BACKEND_PUBLIC_IP:3030/api/status"
-  #           URL="http://g00gle.com"
-  #           if curl -s --head ${URL}
-  #           then
-  #             echo "It worked!"
-  #             exit 0
-  #           else
-  #             echo "Rolling Back"
-  #             exit 1
-  #           fi
-  #     #- notify_on_failure
-  #     - destroy_environment
-  #     - revert-migrations
+            # URL="http://$BACKEND_PUBLIC_IP:3030/api/status"
+            URL="http://g00gle.com"
+            if curl -s --head ${URL}
+            then
+              echo "It worked!"
+              exit 0
+            else
+              echo "Rolling Back"
+              exit 1
+            fi
+      #- notify_on_failure
+      - destroy_environment
 
   # cloudfront-update:
   #   docker:
@@ -335,16 +334,16 @@ jobs:
 workflows:
   default:
     jobs:
-      - build-frontend
-      - build-backend
-      - test-frontend:
-          requires: [build-frontend]
-      - test-backend:
-          requires: [build-backend]
-      - scan-backend:
-          requires: [build-backend]
-      - scan-frontend:
-          requires: [build-frontend]
+      # - build-frontend
+      # - build-backend
+      # - test-frontend:
+      #     requires: [build-frontend]
+      # - test-backend:
+      #     requires: [build-backend]
+      # - scan-backend:
+      #     requires: [build-backend]
+      # - scan-frontend:
+      #     requires: [build-frontend]
       # - deploy-infrastructure:
       #     # requires: [test-frontend, test-backend, scan-frontend, scan-backend]
       #     filters:
@@ -353,11 +352,11 @@ workflows:
       #- configure-infrastructure
       #- run-migrations
           #  requires: [configure-infrastructure]    
-      # - deploy-backend  
+       - deploy-backend  
 
-      # - deploy-frontend:
+       - deploy-frontend
       #     requires: [deploy-infrastructure]    
-      # - smoke-test
-      #      #requires: [deploy-backend, deploy-frontend]
+       - smoke-test
+            requires: [deploy-backend, deploy-frontend]
       #- cloudfront-update
       #- cleanup

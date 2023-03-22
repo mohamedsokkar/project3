@@ -1,3 +1,6 @@
 [URL01] github repo: https://github.com/mohamedsokkar/project3.git
 [URL02] s3/frontend: http://udapeople-7cba6.s3-website-us-east-1.amazonaws.com
 [URL02] s3/frontend (new one after destroying old one): http://udapeople-b99ff.s3-website-us-east-1.amazonaws.com
+[URL03] CloudFront: d2cmlm24xxpmm3.cloudfront.net
+[URL04] back-end application: http://ec2-54-237-177-199.compute-1.amazonaws.com:3030/api/status
+[URL05] Prometheus targets: http://54.236.25.134:9090/targets

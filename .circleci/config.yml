@@ -60,22 +60,22 @@ jobs:
   #         paths: [frontend/node_modules]
   #         key: frontend-build
 
-  # build-backend:
-  #   docker:
-  #     - image: circleci/node:13.8.0
-  #   steps:
-  #     - checkout
-  #     - restore_cache:
-  #         keys: [backend-build]
-  #     - run:
-  #         name: Back-end build
-  #         command: |
-  #           cd backend
-  #           npm install
-  #           npm run build
-  #     - save_cache:
-  #         paths: [backend/node_modules]
-  #         key: backend-build
+  build-backend:
+    docker:
+      - image: circleci/node:13.8.0
+    steps:
+      - checkout
+      - restore_cache:
+          keys: [backend-build]
+      - run:
+          name: Back-end build
+          command: |
+            cd backend
+            npm install
+            npm run build
+      - save_cache:
+          paths: [backend/node_modules]
+          key: backend-build
 
   # test-frontend:
   #   docker:
@@ -133,41 +133,41 @@ jobs:
   #           exit 0
   #           npm audit
 
-  # deploy-infrastructure:
-  #   docker:
-  #     - image: amazon/aws-cli
-  #   steps:
-  #     - checkout
-  #     - run:
-  #         name: Install dependencies
-  #         command: |
-  #           yum install -y tar gzip
-  #     - run:
-  #         name: Ensure back-end infrastructure exists
-  #         command: |
-  #           aws cloudformation deploy \
-  #             --template-file .circleci/files/backend.yml \
-  #             --tags project=udapeople \
-  #             --stack-name "backend" \
-  #             --parameter-overrides ID=${CIRCLE_WORKFLOW_ID:0:5}
+  deploy-infrastructure:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: |
+            yum install -y tar gzip
+      - run:
+          name: Ensure back-end infrastructure exists
+          command: |
+            aws cloudformation deploy \
+              --template-file .circleci/files/backend.yml \
+              --tags project=udapeople \
+              --stack-name "backend" \
+              --parameter-overrides ID=${CIRCLE_WORKFLOW_ID:0:5}
 
-  #     - run:
-  #         name: Ensure front-end infrastructure exist
-  #         command: |
-  #           aws cloudformation deploy \
-  #             --template-file .circleci/files/frontend.yml \
-  #             --tags project=udapeople \
-  #             --stack-name "frontend-${CIRCLE_WORKFLOW_ID:0:5}" \
-  #             --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:5}"
-  #     - run:
-  #         name: Add back-end ip to ansible inventory
-  #         command: |
-  #           aws ec2 describe-instances --region us-east-1 --query 'Reservations[*].Instances[*].PublicIpAddress' --output text >> .circleci/ansible/inventory.txt
+      # - run:
+      #     name: Ensure front-end infrastructure exist
+      #     command: |
+      #       aws cloudformation deploy \
+      #         --template-file .circleci/files/frontend.yml \
+      #         --tags project=udapeople \
+      #         --stack-name "frontend-${CIRCLE_WORKFLOW_ID:0:5}" \
+      #         --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:5}"
+      - run:
+          name: Add back-end ip to ansible inventory
+          command: |
+            aws ec2 describe-instances --region us-east-1 --query 'Reservations[*].Instances[*].PublicIpAddress' --output text >> .circleci/ansible/inventory.txt
 
-  #     - persist_to_workspace:
-  #         root: ~/
-  #         paths:
-  #           - project/.circleci/ansible/inventory.txt 
+      - persist_to_workspace:
+          root: ~/
+          paths:
+            - project/.circleci/ansible/inventory.txt 
 
 
   smoke-test:
@@ -215,43 +215,43 @@ jobs:
   #             --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:5}" \
   #             --stack-name InitialStack
 
-  #  configure-infrastructure:
-  #   docker:
-  #     - image: mareimorsy/aws-node
-  #   steps:
-  #     - checkout
-  #     - add_ssh_keys:
-  #         fingerprints: ["9b:92:e3:f5:aa:a7:bc:6b:bc:43:1f:a8:3b:89:10:49"]
-  #     # - run:
-  #     #     name: "Install Dependencies"
-  #     #     command: |
-  #     #       apk add ansible gzip openssh-client
-  #     - attach_workspace:
-  #         at: ~/
-  #     - run:
-  #         name: Configure server
-  #         command: |
-  #           ls
-  #           pwd
-  #           cd .circleci/ansible
-  #           aws ec2 describe-instances --region us-east-1 --query 'Reservations[*].Instances[*].PublicIpAddress' --output text >> inventory.txt
-  #           cat inventory.txt
-  #           ansible-playbook -i inventory.txt configure-server.yml -vv
-  #           #ansible-playbook -i inventory.txt prometheus-exporter.yml -vv
-  #     # Here's where you will add some code to rollback on failure      
+   configure-infrastructure:
+    docker:
+      - image: mareimorsy/aws-node
+    steps:
+      - checkout
+      - add_ssh_keys:
+          fingerprints: ["9b:92:e3:f5:aa:a7:bc:6b:bc:43:1f:a8:3b:89:10:49"]
+      # - run:
+      #     name: "Install Dependencies"
+      #     command: |
+      #       apk add ansible gzip openssh-client
+      - attach_workspace:
+          at: ~/
+      - run:
+          name: Configure server
+          command: |
+            ls
+            pwd
+            cd .circleci/ansible
+            aws ec2 describe-instances --region us-east-1 --query 'Reservations[*].Instances[*].PublicIpAddress' --output text >> inventory.txt
+            cat inventory.txt
+            ansible-playbook -i inventory.txt configure-server.yml -vv
+            #ansible-playbook -i inventory.txt prometheus-exporter.yml -vv
+      # Here's where you will add some code to rollback on failure      
 
-  #  run-migrations:
-  #   docker: 
-  #     - image: mareimorsy/aws-node
+   run-migrations:
+    docker: 
+      - image: mareimorsy/aws-node
 
-  #   steps:
-  #     - checkout
-  #     - run:
-  #         name: Run migrations
-  #         command: |
-  #           cd backend
-  #           npm install
-  #           npm run migrations
+    steps:
+      - checkout
+      - run:
+          name: Run migrations
+          command: |
+            cd backend
+            npm install
+            npm run migrations
 
       # - run:
       #     name: Send migration results to memstash
@@ -260,36 +260,36 @@ jobs:
       #       exit 1
      # Here's where you will add some code to rollback on failure      
 
-  # deploy-backend:
-  #   docker:
-  #     - image: mareimorsy/aws-node
-  #   steps:
-  #     - checkout
-  #     - add_ssh_keys:
-  #         fingerprints: ["9b:92:e3:f5:aa:a7:bc:6b:bc:43:1f:a8:3b:89:10:49"]
-  #     - run:
-  #         name: Deploy backend
-  #         command: |
-  #           export TYPEORM_HOST=$(aws ec2 describe-instances --region us-east-1 --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
-  #           echo $TYPEORM_HOST >> .circleci/ansible/inventory.txt
+  deploy-backend:
+    docker:
+      - image: mareimorsy/aws-node
+    steps:
+      - checkout
+      - add_ssh_keys:
+          fingerprints: ["9b:92:e3:f5:aa:a7:bc:6b:bc:43:1f:a8:3b:89:10:49"]
+      - run:
+          name: Deploy backend
+          command: |
+            export TYPEORM_HOST=$(aws ec2 describe-instances --region us-east-1 --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
+            echo $TYPEORM_HOST >> .circleci/ansible/inventory.txt
 
-  #           cd backend
-  #           npm i
-  #           npm run build
-  #           echo "TYPEORM_ENTITIES=./dist/modules/domain/**/*.entity{.ts,.js}" > .env
-  #           echo "TYPEORM_HOST=${TYPEORM_HOST}" >> .env
-  #           echo "TYPEORM_PORT=${TYPEORM_PORT}" >> .env
-  #           echo "TYPEORM_USERNAME=${TYPEORM_USERNAME}" >> .env
-  #           echo "TYPEORM_PASSWORD=${TYPEORM_PASSWORD}" >> .env
-  #           echo "TYPEORM_DATABASE=${TYPEORM_DATABASE}" >> .env
-  #           echo "TYPEORM_MIGRATIONS_DIR=./dist/migrations" >> .env
-  #           echo "TYPEORM_MIGRATIONS=./dist/migrations/*.ts" >> .env
-  #           tar -czf artifact.tar.gz dist/* package* .env
-  #           cp artifact.tar.gz ~/project/.circleci/ansible/roles/deploy/artifact.tar.gz
-  #           ls ../.circleci/ansible/roles/deploy/
-  #           cd ../.circleci/ansible
-  #           cat inventory.txt
-  #           ansible-playbook -i inventory.txt deploy-backend.yml
+            cd backend
+            npm i
+            npm run build
+            echo "TYPEORM_ENTITIES=./dist/modules/domain/**/*.entity{.ts,.js}" > .env
+            echo "TYPEORM_HOST=${TYPEORM_HOST}" >> .env
+            echo "TYPEORM_PORT=${TYPEORM_PORT}" >> .env
+            echo "TYPEORM_USERNAME=${TYPEORM_USERNAME}" >> .env
+            echo "TYPEORM_PASSWORD=${TYPEORM_PASSWORD}" >> .env
+            echo "TYPEORM_DATABASE=${TYPEORM_DATABASE}" >> .env
+            echo "TYPEORM_MIGRATIONS_DIR=./dist/migrations" >> .env
+            echo "TYPEORM_MIGRATIONS=./dist/migrations/*.ts" >> .env
+            tar -czf artifact.tar.gz dist/* package* .env
+            cp artifact.tar.gz ~/project/.circleci/ansible/roles/deploy/artifact.tar.gz
+            ls ../.circleci/ansible/roles/deploy/
+            cd ../.circleci/ansible
+            cat inventory.txt
+            ansible-playbook -i inventory.txt deploy-backend.yml
   #     #Here's where you will add some code to rollback on failure  
 
 
@@ -353,9 +353,9 @@ workflows:
       #         only: [main]               
       - configure-infrastructure:
              requires: [deploy-infrastructure]
-      - run-migrations
+      - run-migrations:
              requires: [configure-infrastructure]    
-        - deploy-backend  
+        - deploy-backend:
              requires: [run-migrations]
       #  - deploy-frontend
       #     requires: [deploy-infrastructure]    

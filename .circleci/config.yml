@@ -60,22 +60,22 @@ jobs:
   #         paths: [frontend/node_modules]
   #         key: frontend-build
 
-  # build-backend:
-  #   docker:
-  #     - image: circleci/node:13.8.0
-  #   steps:
-  #     - checkout
-  #     - restore_cache:
-  #         keys: [backend-build]
-  #     - run:
-  #         name: Back-end build
-  #         command: |
-  #           cd backend
-  #           npm install
-  #           npm run build
-  #     - save_cache:
-  #         paths: [backend/node_modules]
-  #         key: backend-build
+  build-backend:
+    docker:
+      - image: circleci/node:13.8.0
+    steps:
+      - checkout
+      - restore_cache:
+          keys: [backend-build]
+      - run:
+          name: Back-end build
+          command: |
+            cd backend
+            npm install
+            npm run build
+      - save_cache:
+          paths: [backend/node_modules]
+          key: backend-build
 
   # test-frontend:
   #   docker:
@@ -133,23 +133,23 @@ jobs:
   #           exit 0
   #           npm audit
 
-  # deploy-infrastructure:
-  #   docker:
-  #     - image: amazon/aws-cli
-  #   steps:
-  #     - checkout
-  #     - run:
-  #         name: Install dependencies
-  #         command: |
-  #           yum install -y tar gzip
-  #     - run:
-  #         name: Ensure back-end infrastructure exists
-  #         command: |
-  #           aws cloudformation deploy \
-  #             --template-file .circleci/files/backend.yml \
-  #             --tags project=udapeople \
-  #             --stack-name "backend" \
-  #             --parameter-overrides ID=${CIRCLE_WORKFLOW_ID:0:5}
+  deploy-infrastructure:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: |
+            yum install -y tar gzip
+      - run:
+          name: Ensure back-end infrastructure exists
+          command: |
+            aws cloudformation deploy \
+              --template-file .circleci/files/backend.yml \
+              --tags project=udapeople \
+              --stack-name "backend" \
+              --parameter-overrides ID=${CIRCLE_WORKFLOW_ID:0:5}
 
       # - run:
       #     name: Ensure front-end infrastructure exist
@@ -215,50 +215,50 @@ jobs:
   #             --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:5}" \
   #             --stack-name InitialStack
 
-  # configure-infrastructure:
-  #   docker:
-  #     - image: mareimorsy/aws-node
-  #   steps:
-  #     - checkout
-  #     - add_ssh_keys:
-  #         fingerprints: ["9b:92:e3:f5:aa:a7:bc:6b:bc:43:1f:a8:3b:89:10:49"]
-  #     # - run:
-  #     #     name: "Install Dependencies"
-  #     #     command: |
-  #     #       apk add ansible gzip openssh-client
-  #     - attach_workspace:
-  #         at: ~/
-  #     - run:
-  #         name: Configure server
-  #         command: |
-  #           ls
-  #           pwd
-  #           cd .circleci/ansible
-  #           aws ec2 describe-instances --region us-east-1 --query 'Reservations[*].Instances[*].PublicIpAddress' --output text >> inventory.txt
-  #           cat inventory.txt
-  #           ansible-playbook -i inventory.txt configure-server.yml -vv
-  #           #ansible-playbook -i inventory.txt prometheus-exporter.yml -vv
-  #     # Here's where you will add some code to rollback on failure      
+  configure-infrastructure:
+    docker:
+      - image: mareimorsy/aws-node
+    steps:
+      - checkout
+      - add_ssh_keys:
+          fingerprints: ["9b:92:e3:f5:aa:a7:bc:6b:bc:43:1f:a8:3b:89:10:49"]
+      # - run:
+      #     name: "Install Dependencies"
+      #     command: |
+      #       apk add ansible gzip openssh-client
+      - attach_workspace:
+          at: ~/
+      - run:
+          name: Configure server
+          command: |
+            ls
+            pwd
+            cd .circleci/ansible
+            aws ec2 describe-instances --region us-east-1 --query 'Reservations[*].Instances[*].PublicIpAddress' --output text >> inventory.txt
+            cat inventory.txt
+            ansible-playbook -i inventory.txt configure-server.yml -vv
+            #ansible-playbook -i inventory.txt prometheus-exporter.yml -vv
+      # Here's where you will add some code to rollback on failure      
 
-  # run-migrations:
-  #   docker: 
-  #     - image: mareimorsy/aws-node
+  run-migrations:
+    docker: 
+      - image: mareimorsy/aws-node
 
-  #   steps:
-  #     - checkout
-  #     - run:
-  #         name: Run migrations
-  #         command: |
-  #           cd backend
-  #           npm install
-  #           npm run migrations
+    steps:
+      - checkout
+      - run:
+          name: Run migrations
+          command: |
+            cd backend
+            npm install
+            npm run migrations
 
-  #     # - run:
-  #     #     name: Send migration results to memstash
-  #     #     command: |
-  #     #       # Your code here
-  #     #       exit 1
-  #    # Here's where you will add some code to rollback on failure      
+      # - run:
+      #     name: Send migration results to memstash
+      #     command: |
+      #       # Your code here
+      #       exit 1
+     # Here's where you will add some code to rollback on failure      
 
   deploy-backend:
     docker:
@@ -337,7 +337,7 @@ workflows:
   default:
     jobs:
       # - build-frontend
-      # - build-backend
+      - build-backend
       # - test-frontend:
       #     requires: [build-frontend]
       # - test-backend:
@@ -346,17 +346,17 @@ workflows:
       #     requires: [build-backend]
       # - scan-frontend:
       #     requires: [build-frontend]
-      # - deploy-infrastructure:
-      #        requires: [build-backend]
+      - deploy-infrastructure:
+             requires: [build-backend]
       #     filters:
       #       branches:   
       #         only: [main]               
-      # - configure-infrastructure:
-      #        requires: [deploy-infrastructure]
-      # - run-migrations:
-      #        requires: [configure-infrastructure]    
-      - deploy-backend
-             #requires: [run-migrations]
+      - configure-infrastructure:
+             requires: [deploy-infrastructure]
+      - run-migrations:
+             requires: [configure-infrastructure]    
+      - deploy-backend:
+             requires: [run-migrations]
       #  - deploy-frontend
       #     requires: [deploy-infrastructure]    
       - smoke-test:
